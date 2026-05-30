@@ -72,6 +72,37 @@ Creates checklists, scoring rubrics, and validation templates that other agents 
 
 ---
 
+## Analyst — Traditional Data Analysis
+
+### Role
+Analyzes data and extracts insights — trends, patterns, and actionable recommendations.
+
+### Responsibilities
+- **Analyze trends** — Health score changes, engagement patterns over time
+- **Identify patterns** — Common characteristics of at-risk or high-performing accounts
+- **Generate insights** — Translate data into actionable recommendations
+- **Produce reports** — Summaries, dashboards, analytical narratives
+
+### Capabilities
+- Trend analysis
+- Pattern detection
+- Report generation
+- Data-driven recommendations
+
+### Boundaries
+- Does NOT write to Salesforce
+- Does NOT execute changes
+- Does NOT create frameworks (SOP Analyst does that)
+- Does NOT access external systems
+
+### When to Use
+- Need to understand why a metric changed
+- Need to identify patterns in account data
+- Need a report or summary
+- Need data-driven recommendations
+
+---
+
 ## SF Reader — Data Retriever
 
 ### Role

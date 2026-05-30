@@ -39,6 +39,7 @@ This platform automates account health monitoring, ticket triage, and Salesforce
 |-------|--------------|------|--------------|
 | **Galileo** | `galileo` | Supervisor — coordinates all workers | Full (orchestration) |
 | **SOP Analyst** | `sop-analyst` | Builds audit checklists & scoring frameworks | None (logic only) |
+| **Analyst** | `analyst` | Traditional data analysis — trends, patterns, insights | None (analysis only) |
 | **SF Reader** | `sf-reader` | Pulls account & ticket data from Salesforce | Read-only |
 | **Validator** | `validator` | Flags hygiene issues against checklist | None (read + validate) |
 | **Executor** | `executor` | Writes changes back to Salesforce | Write (with human approval) |
@@ -79,6 +80,7 @@ hermes profile install ./agents/sf-reader --name sf-reader --alias
 hermes profile install ./agents/validator --name validator --alias
 hermes profile install ./agents/executor --name executor --alias
 hermes profile install ./agents/sop-analyst --name sop-analyst --alias
+hermes profile install ./agents/analyst --name analyst --alias
 ```
 
 ## Configuration
@@ -129,7 +131,8 @@ hermes-scaled-cs/
 │   ├── sf-reader/             # Salesforce Reader
 │   ├── validator/             # Hygiene Validator
 │   ├── executor/              # Controlled Executor
-│   └── sop-analyst/           # SOP & Scoring Analyst
+│   ├── sop-analyst/           # SOP & Scoring Analyst
+│   └── analyst/               # Traditional Data Analyst
 ├── docs/
 │   ├── architecture.md        # Detailed architecture
 │   ├── setup-guide.md         # Full setup instructions
