@@ -1,0 +1,24 @@
+# SF Reader — Salesforce Data Agent Distribution
+name: sf-reader
+version: 1.0.0
+description: "Read-only Salesforce data agent. Pulls account, ticket, contact, and opportunity data with query-cost awareness."
+hermes_requires: ">=0.13.0"
+author: "Angel Ancheta"
+license: "MIT"
+
+env_requires:
+  - name: OPENROUTER_API_KEY
+    description: "OpenRouter API key for model access"
+    required: true
+
+  - name: SALESFORCE_USERNAME
+    description: "Salesforce username"
+    required: true
+
+  - name: SALESFORCE_PASSWORD
+    description: "Salesforce password"
+    required: true
+
+  - name: SALESFORCE_SECURITY_TOKEN
+    description: "Salesforce security token"
+    required: true

@@ -1,0 +1,12 @@
+# Validator — Hygiene + Score Agent Distribution
+name: validator
+version: 1.0.0
+description: "Account hygiene and score validation agent. Flags issues against SOP checklist — skeptical, blunt, picky."
+hermes_requires: ">=0.13.0"
+author: "Angel Ancheta"
+license: "MIT"
+
+env_requires:
+  - name: OPENROUTER_API_KEY
+    description: "OpenRouter API key for model access"
+    required: true

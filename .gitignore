@@ -1,0 +1,60 @@
+# Hermes Profile Distribution .gitignore
+
+# Secrets & credentials
+.env
+auth.json
+auth.lock
+
+# Memory & sessions (user-specific)
+memories/
+sessions/
+state.db
+state.db-shm
+state.db-wal
+
+# Logs
+logs/
+
+# Caches
+audio_cache/
+image_cache/
+*_cache/
+
+# Generated working files
+workspace/
+plans/
+home/
+
+# Gateway runtime
+gateway.lock
+gateway.pid
+gateway_state.json
+channel_directory.json
+
+# Locks
+*.lock
+
+# Skills prompt snapshot (auto-generated)
+.skills_prompt_snapshot.json
+
+# Config backups (auto-generated)
+config.yaml.bak.*
+
+# Model dev cache (auto-generated)
+models_dev_cache.json
+ollama_cloud_models_cache.json
+
+# Kanban database (user-specific)
+kanban.db
+
+# Pairing data
+pairing/
+
+# Sandboxes
+sandboxes/
+
+# Node.js installation
+node/
+
+# Slack manifest (auto-generated)
+slack-manifest.json
