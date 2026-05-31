@@ -26,13 +26,17 @@ If you cannot find a matching `dispatched` entry, that is itself a problem: writ
 
 ## What you owe Leo (in order, on every dispatch)
 
-1. **`ack` within 2 minutes of receiving the prompt.** This is non-negotiable. If you can read this contract, you can write an ack. Required field: `received_prompt` — echo the first 120 chars of the prompt you received so Leo can confirm it wasn't truncated.
+1. **`ack` within 2 minutes of receiving the prompt.** This is non-negotiable. If you can read this contract, you can write an ack.
+   - Fields: `received_prompt` — echo the first 120 chars of the prompt you received so Leo can confirm it wasn't truncated.
 
-2. **A `progress` entry at minimum every 10 minutes of working.** Required field: `note` (one short line — what just happened or what's in progress). Optional field: `pct_complete` (integer 0–100). Real progress when you have it; honest "still waiting on X" when you don't. If you genuinely cannot work for 10 minutes (e.g. external API timeout), write `progress` saying so — silence is read as a stall, not as patience.
+2. **A `progress` entry at minimum every 10 minutes of working.** Real progress when you have it; honest "still waiting on X" when you don't. If you genuinely cannot work for 10 minutes (e.g. external API timeout), write `progress` saying so — silence is read as a stall, not as patience.
+   - Fields: `note` (required, one short line — what just happened or what's in progress), `pct_complete` (optional, integer 0–100).
 
-3. **A `blocker` entry the moment you cannot proceed.** Never sit on a blocker. The whole point of having a supervisor is that he routes blockers to humans. Write the blocker, stop working, and wait for instructions in your next dispatch. Required fields: `reason` (one line, plain English) and `needs` (one line, what would unblock you).
+3. **A `blocker` entry the moment you cannot proceed.** Never sit on a blocker. The whole point of having a supervisor is that he routes blockers to humans. Write the blocker, stop working, and wait for instructions in your next dispatch.
+   - Fields: `reason` (required, one line — what's blocking you), `needs` (required, one line — what would unblock you).
 
-4. **A `done` entry on completion.** Required field: `summary` (one line — what the artifact is). Also include `output_path` (absolute) to the artifact, or a short inline `output` for results under ~30 lines. After writing `done`, stop. Do not start additional work; Leo will dispatch you again if there is more.
+4. **A `done` entry on completion.** After writing `done`, stop. Do not start additional work; Leo will dispatch you again if there is more.
+   - Fields: `summary` (required, one line — what the artifact is), `output_path` (absolute path to artifact) **or** inline `output` (for results under ~30 lines).
 
 Full schema for each event: see `/home/hermes/hermes-scaled-cs/agents/galileo/skills/autonomous-ai-agents/coordination-protocol/references/ledger-format.md`.
 
