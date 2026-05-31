@@ -1,0 +1,63 @@
+# Coordination cadence — deterministic timings the watchdog computes against.
+# Edit these numbers here, not in SKILL.md prose. Leo should READ this file when
+# computing "is X overdue?" — do not memorize from prior context, values change.
+
+version: 1
+
+ledger:
+  active_path: /home/hermes/botfather/status/active.jsonl
+  archive_path: /home/hermes/botfather/status/archive.jsonl
+  poll_interval_seconds: 300        # Leo re-reads active.jsonl every 5 minutes
+
+dispatch:
+  ack_deadline_seconds: 120         # Worker must write `ack` within 2 minutes of `dispatched`
+  ack_failure_action: redispatch    # If no ack, assume tooling failure (multi-line -z, etc.), not worker failure
+  ack_redispatch_limit: 1           # Try once more, then escalate as tooling issue
+
+watchdog:
+  # Thresholds compared against silence_age = now - last_entry.ts for an active task.
+  # Steps fire in order; do not skip.
+  steps:
+    - name: ok
+      max_silence_seconds: 600       # < 10 min: do nothing
+      action: none
+    - name: soft_poke
+      max_silence_seconds: 1200      # 10-20 min: nudge the worker via `<profile> -z "status check ..."`
+      action: poke
+    - name: auto_retry
+      max_silence_seconds: 1800      # 20-30 min: kill + redispatch original prompt ONCE, log `retry`
+      action: kill_and_redispatch
+    - name: escalate
+      max_silence_seconds: null      # > 30 min after retry, OR any second silence: escalate
+      action: escalate_to_team
+
+retry:
+  max_auto_retries_per_task: 1       # Hard limit. Second silence = escalate, no further retries.
+
+worker_self_reporting:
+  # The contract workers commit to in their SOUL. Documented for reference; Leo enforces by
+  # treating absence of an entry as a stall, not by trusting worker promises.
+  progress_interval_seconds: 600     # Worker SHOULD append a `progress` entry every <= 10 min while working
+  on_blocker: write_blocker_entry    # Worker MUST write `blocker` event, never silently wait
+  on_done: write_done_entry          # Worker MUST write `done` event with output path
+
+reporting_to_team:
+  # When Leo posts unprompted to #galileo-updates. Cadence is event-driven, NOT time-driven.
+  channel: "#galileo-updates"
+  channel_id: C0B6PHEG60H
+  post_on_events:
+    - dispatched
+    - done
+    - blocker
+    - escalated
+  do_not_post_on_events:
+    - ack
+    - progress
+    - poke
+    - retry
+
+escalation_to_user:
+  # When Leo gives up and pulls a human in. Always #galileo-updates per current preference.
+  channel: "#galileo-updates"
+  format: see references/escalation-playbook.md
+  stop_polling_after_escalation: true
