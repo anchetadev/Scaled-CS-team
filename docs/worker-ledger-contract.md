@@ -9,27 +9,30 @@ You are a worker. Galileo dispatched you. He is *not* sitting next to you waitin
 
 ## The file
 
-`/home/hermes/botfather/status/active.<your-profile>.jsonl` — your own shard, one entry per line. Append-only. Use:
+`/home/hermes/botfather/status/active.jsonl` — the shared active ledger, one entry per line, all workers. Append-only. Use `flock` to avoid clobbering concurrent writes:
 
 ```bash
-echo '{"ts":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'","task_id":"<id>","worker":"<your-profile>","event":"<event>","by":"<your-profile>", ...}' \
-  >> /home/hermes/botfather/status/active.<your-profile>.jsonl
+flock -x /home/hermes/botfather/status/active.jsonl -c \
+  'echo "{\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"task_id\":\"<id>\",\"worker\":\"<your-profile>\",\"event\":\"<event>\",\"by\":\"<your-profile>\", ...}" >> /home/hermes/botfather/status/active.jsonl'
 ```
 
-If `flock` is available, prefer:
-```bash
-flock -x /home/hermes/botfather/status/active.<your-profile>.jsonl -c '...append...'
-```
+If `flock` is genuinely unavailable, a plain append (`>>`) is acceptable for now — Galileo polls every 5 minutes, so the race window is small. Do not silently fall back; mention the missing lock in your first `progress` note.
+
+## The `task_id` rule
+
+**Use the `task_id` from the `dispatched` entry Galileo wrote — verbatim. Do not invent your own.** When you receive a dispatch, your first action is to grep `active.jsonl` for the most recent `dispatched` event addressed to your worker (`worker: "<your-profile>"`, no `ack` yet) and reuse its `task_id` on every entry you write for that task. Inventing a new id breaks pipeline tracking and the watchdog's silence-age math.
+
+If you cannot find a matching `dispatched` entry, that is itself a problem: write a `blocker` with `reason: "no matching dispatched entry"` rather than fabricating an id.
 
 ## What you owe Leo (in order, on every dispatch)
 
-1. **`ack` within 2 minutes of receiving the prompt.** This is non-negotiable. If you can read this contract, you can write an ack. Echo the first 120 chars of the prompt you received so Leo can confirm it wasn't truncated.
+1. **`ack` within 2 minutes of receiving the prompt.** This is non-negotiable. If you can read this contract, you can write an ack. Required field: `received_prompt` — echo the first 120 chars of the prompt you received so Leo can confirm it wasn't truncated.
 
-2. **A `progress` entry at minimum every 10 minutes of working.** Real progress when you have it; honest "still waiting on X" when you don't. If you genuinely cannot work for 10 minutes (e.g. external API timeout), write `progress` saying so — silence is read as a stall, not as patience.
+2. **A `progress` entry at minimum every 10 minutes of working.** Required field: `note` (one short line — what just happened or what's in progress). Optional field: `pct_complete` (integer 0–100). Real progress when you have it; honest "still waiting on X" when you don't. If you genuinely cannot work for 10 minutes (e.g. external API timeout), write `progress` saying so — silence is read as a stall, not as patience.
 
 3. **A `blocker` entry the moment you cannot proceed.** Never sit on a blocker. The whole point of having a supervisor is that he routes blockers to humans. Write the blocker, stop working, and wait for instructions in your next dispatch. Required fields: `reason` (one line, plain English) and `needs` (one line, what would unblock you).
 
-4. **A `done` entry on completion.** Include `output_path` (absolute) to the artifact, or a short inline `output` for results under ~30 lines. After writing `done`, stop. Do not start additional work; Leo will dispatch you again if there is more.
+4. **A `done` entry on completion.** Required field: `summary` (one line — what the artifact is). Also include `output_path` (absolute) to the artifact, or a short inline `output` for results under ~30 lines. After writing `done`, stop. Do not start additional work; Leo will dispatch you again if there is more.
 
 Full schema for each event: see `/home/hermes/hermes-scaled-cs/agents/galileo/skills/autonomous-ai-agents/coordination-protocol/references/ledger-format.md`.
 

@@ -86,7 +86,7 @@ When a task closes (`done` or `escalated`), Leo:
 2. Appends them to `archive.jsonl`.
 3. Rewrites `active.jsonl` without the closed rows.
 
-Implementation note: file locking matters. Workers append concurrently. Use `flock` on writes (`flock -x active.jsonl -c 'echo "<json>" >> active.jsonl'`) or each worker writes to its own `active.<worker>.jsonl` shard and Leo merges on read. Shard-per-worker is simpler and avoids lock contention — recommended.
+Implementation note: file locking matters. Workers append concurrently to the shared `active.jsonl`. Use `flock` on writes (`flock -x active.jsonl -c 'echo "<json>" >> active.jsonl'`). Per-worker shards were considered but rejected in v1.2.1 — the merge step on read added more complexity than the locking it avoided, and with a 5-minute Leo polling cadence the lock contention window is negligible.
 
 ## Sanity checks Leo runs each poll
 
