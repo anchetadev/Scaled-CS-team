@@ -1,0 +1,6 @@
+# galileo profile config overlay (model only; merges with Hermes defaults).
+model:
+  default: xiaomi/mimo-v2.5-pro
+  provider: openrouter
+  base_url: https://openrouter.ai/api/v1
+  api_mode: chat_completions

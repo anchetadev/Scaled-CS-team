@@ -24,7 +24,7 @@ echo "📦 Installing agents..."
 echo ""
 
 # Install each agent
-AGENTS=("galileo" "sf-reader" "validator" "executor" "sop-analyst" "analyst")
+AGENTS=("galileo" "tycho" "curie" "hopper" "euclid" "kepler")
 
 for agent in "${AGENTS[@]}"; do
     AGENT_DIR="$AGENTS_DIR/$agent"
@@ -46,7 +46,7 @@ echo "║    ✅ Installation complete!                             ║"
 echo "╚═══════════════════════════════════════════════════════════╝"
 echo ""
 echo "Installed agents:"
-hermes profile list | grep -E "galileo|sf-reader|validator|executor|sop-analyst|analyst" || true
+hermes profile list | grep -E "galileo|tycho|curie|hopper|euclid|kepler" || true
 echo ""
 echo "Next steps:"
 echo "  1. Set up API keys in each agent's .env file"

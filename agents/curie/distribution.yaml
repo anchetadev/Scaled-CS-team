@@ -1,0 +1,12 @@
+# Curie — Hygiene + Score Validator Distribution
+name: curie
+version: 1.1.0
+description: "Curie — Hygiene + Score Validator for the Scaled CS platform. Integrity check on pulled data (completeness, freshness, validity, consistency, provenance, coverage). No interpretation, no writes."
+hermes_requires: ">=0.13.0"
+author: "Angel Ancheta"
+license: "MIT"
+
+env_requires:
+  - name: OPENROUTER_API_KEY
+    description: "OpenRouter API key for model access"
+    required: true

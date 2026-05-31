@@ -1,0 +1,12 @@
+# Kepler — Data Analyst Distribution
+name: kepler
+version: 1.1.0
+description: "Kepler — Data Analyst for the Scaled CS platform. Scores validated data against the rubric and interprets what it means. Read-only; recommends but never writes."
+hermes_requires: ">=0.13.0"
+author: "Angel Ancheta"
+license: "MIT"
+
+env_requires:
+  - name: OPENROUTER_API_KEY
+    description: "OpenRouter API key for model access"
+    required: true

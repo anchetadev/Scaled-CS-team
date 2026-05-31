@@ -2,168 +2,78 @@
 
 A team of coordinated AI agents for **Scaled Customer Success** — built on [Hermes Agent](https://github.com/NousResearch/hermes-agent).
 
-This platform automates account health monitoring, ticket triage, and Salesforce operations at scale by distributing work across specialized agents with strict role boundaries.
+This platform automates account-health monitoring, renewal-risk auditing, and Salesforce operations at scale by distributing work across specialized agents with strict role boundaries. Humans talk to **Galileo**; Galileo dispatches the work to a team of named specialists and relays the results back.
 
-## Architecture
+## The team
+
+Each agent is named for a scientist whose work mirrors its role — the names are the architecture.
+
+| Persona | Role | Profile | Access |
+|---|---|---|---|
+| **Galileo** | Supervisor / bot father — human-facing front door, coordinates the workers | `galileo` | Orchestration (Slack) |
+| **Euclid** | Rubric / SOP Author — defines the checklists, rubrics, and scoring rules | `euclid` | None (definitions only, zero data) |
+| **Tycho** | Salesforce Reader — pulls raw account data, faithfully, a dumb pipe | `tycho` | Read-only Salesforce |
+| **Curie** | Hygiene + Score Validator — is the data trustworthy? (integrity check) | `curie` | None |
+| **Kepler** | Data Analyst — scores the data against the rubric; what does it mean? | `kepler` | Read-only (works on Tycho's data) |
+| **Hopper** | Controlled Executor — writes approved changes, per-batch human approval | `hopper` | Write Salesforce (gated) |
+
+Why the names fit: **Euclid** built everything from exact definitions. **Tycho** Brahe made history's most precise observations and handed them to **Kepler**, who found the meaning in them — exactly the Reader→Analyst handoff. **Curie** trusted nothing she had not measured. **Hopper** (Grace Hopper) was the careful, precise executor who coined "debugging."
+
+## The pipeline
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        Slack Team                           │
-│  ┌───────────────────────────────────────────────────────┐  │
-│  │                    GALILEO                            │  │
-│  │              (Supervisor / Bot Father)                │  │
-│  │                                                       │  │
-│  │  • Human-facing front door                           │  │
-│  │  • Spawns and coordinates workers                    │  │
-│  │  • Reports results in plain English                  │  │
-│  └───────────────────────────────────────────────────────┘  │
-│                            │                                │
-│         ┌──────────────────┼──────────────────┐             │
-│         ▼                  ▼                  ▼             │
-│  ┌─────────────┐   ┌─────────────┐   ┌─────────────┐       │
-│  │ SOP Analyst │   │ SF Reader   │   │ Validator   │       │
-│  │ (Checklist) │   │ (Read-only) │   │ (Hygiene)   │       │
-│  └─────────────┘   └─────────────┘   └─────────────┘       │
-│                            │                                │
-│                     ┌─────────────┐                         │
-│                     │  Executor   │                         │
-│                     │ (Writes w/  │                         │
-│                     │  approval)  │                         │
-│                     └─────────────┘                         │
-└─────────────────────────────────────────────────────────────┘
+                         ┌──────────────────────────────┐
+   Slack team  ───────▶  │            GALILEO           │  ◀─── escalates to humans
+                         │   (supervisor / bot father)  │
+                         └──────────────┬───────────────┘
+                                        │ dispatches
+   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐
+   │  EUCLID  │──▶│  TYCHO   │──▶│  CURIE   │──▶│  KEPLER  │──▶│  HOPPER  │
+   │ defines  │   │  pulls   │   │ validates│   │ interprets│  │  writes  │
+   │  rubric  │   │   data   │   │ integrity│   │  & scores │  │ (approval)│
+   └──────────┘   └──────────┘   └──────────┘   └──────────┘   └──────────┘
 ```
 
-## Agents
+Each boundary is a deliberate safety separation, not just an org chart:
+- **Euclid defines** scores; **Kepler applies** them — the author never touches live data.
+- **Tycho reads** (read-only creds); **Hopper writes** (separate, gated) — a read mistake can't reach write.
+- **Curie** asks *is the data trustworthy?*; **Kepler** asks *what does it mean?* — integrity stays an independent check.
 
-| Agent | Profile Name | Role | Access Level |
-|-------|--------------|------|--------------|
-| **Galileo** | `galileo` | Supervisor — coordinates all workers | Full (orchestration) |
-| **SOP Analyst** | `sop-analyst` | Builds audit checklists & scoring frameworks | None (logic only) |
-| **Analyst** | `analyst` | Traditional data analysis — trends, patterns, insights | None (analysis only) |
-| **SF Reader** | `sf-reader` | Pulls account & ticket data from Salesforce | Read-only |
-| **Validator** | `validator` | Flags hygiene issues against checklist | None (read + validate) |
-| **Executor** | `executor` | Writes changes back to Salesforce | Write (with human approval) |
+## Install
 
-### Design Principles
-
-- **Reader/Executor split** — Read and write live in different identities so a mistake on one side can't reach the other.
-- **Strict role boundaries** — Each agent does ONE thing well. Galileo enforces these boundaries.
-- **Human-in-the-loop** — Executor requires per-batch approval before writing changes.
-- **Ephemeral workers** — For one-off tasks, Galileo spawns short-lived agents that die when done.
-
-## Quick Start
-
-### Prerequisites
-
-- [Hermes Agent](https://hermes-agent.nousresearch.com/docs/getting-started/quickstart) installed
-- API keys: `OPENROUTER_API_KEY` (or your preferred provider)
-- Slack bot tokens (for Slack integration)
-
-### Install All Agents
+Requires [Hermes Agent](https://hermes-agent.nousresearch.com/docs/getting-started/quickstart) `>= 0.13.0`.
 
 ```bash
-# Clone the platform
-git clone https://github.com/YOUR_USERNAME/hermes-scaled-cs.git
-cd hermes-scaled-cs
-
-# Run the installer
-chmod +x scripts/install-all.sh
+# Install every agent at once
 ./scripts/install-all.sh
+
+# Or install one
+hermes profile install ./agents/tycho --name tycho --alias
 ```
 
-### Install Individual Agents
+After install, populate each agent's `.env` (a `.env.EXAMPLE` is generated listing required keys), then:
 
 ```bash
-# From the cloned repo
-hermes profile install ./agents/galileo --name galileo --alias
-hermes profile install ./agents/sf-reader --name sf-reader --alias
-hermes profile install ./agents/validator --name validator --alias
-hermes profile install ./agents/executor --name executor --alias
-hermes profile install ./agents/sop-analyst --name sop-analyst --alias
-hermes profile install ./agents/analyst --name analyst --alias
+hermes gateway start -p galileo      # bring Galileo online in Slack
+hermes -p galileo                    # chat with Galileo directly
 ```
 
-## Configuration
+## Environment
 
-### Required Environment Variables
+- **All agents:** `OPENROUTER_API_KEY`
+- **Galileo:** `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN` (+ optional `SLACK_ALLOWED_USERS`)
+- **Tycho:** Salesforce Integration-User + Connected App OAuth — `SALESFORCE_INSTANCE_URL`, `SALESFORCE_CONSUMER_KEY`, `SALESFORCE_CONSUMER_SECRET`, `SALESFORCE_USERNAME`, `SALESFORCE_PASSWORD`, `SALESFORCE_SECURITY_TOKEN`
+- **Hopper:** write-capable Salesforce creds — declared but optional; the executor's approval gate is still under design.
 
-Set these in each agent's `.env` file (`~/.hermes/profiles/<agent>/.env`):
+Secrets (`.env`, `auth.json`, memories, sessions, `state.db`) are git-ignored and never shipped.
 
-```bash
-# Model access (required for all agents)
-OPENROUTER_API_KEY=***
+## Docs
 
-# Slack integration (required for Galileo)
-SLACK_BOT_TOKEN=xoxb-***
-SLACK_APP_TOKEN=xapp-***
-
-# Salesforce (required for Reader + Executor)
-SALESFORCE_USERNAME=your@email.com
-SALESFORCE_PASSWORD=***
-SALESFORCE_SECURITY_TOKEN=***
-```
-
-### Starting the Platform
-
-```bash
-# Start Galileo's gateway (he coordinates everything)
-hermes gateway start -p galileo
-
-# Chat with Galileo
-hermes -p galileo
-```
-
-## Development
-
-### Project Structure
-
-```
-hermes-scaled-cs/
-├── README.md                  # This file
-├── LICENSE                    # MIT License
-├── agents/
-│   ├── galileo/               # Supervisor agent
-│   │   ├── distribution.yaml  # Agent metadata
-│   │   ├── README.md          # Agent-specific docs
-│   │   ├── SOUL.md            # Personality definition
-│   │   ├── config.yaml        # Model + tool config
-│   │   └── skills/            # Agent-specific skills
-│   ├── sf-reader/             # Salesforce Reader
-│   ├── validator/             # Hygiene Validator
-│   ├── executor/              # Controlled Executor
-│   ├── sop-analyst/           # SOP & Scoring Analyst
-│   └── analyst/               # Traditional Data Analyst
-├── docs/
-│   ├── architecture.md        # Detailed architecture
-│   ├── setup-guide.md         # Full setup instructions
-│   ├── agent-roles.md         # Who does what
-│   └── extending.md           # Adding new agents
-└── scripts/
-    ├── install-all.sh         # Install all agents
-    └── setup-sf.sh            # Salesforce credential setup
-```
-
-### Adding a New Agent
-
-1. Create a new directory under `agents/`
-2. Add `distribution.yaml`, `SOUL.md`, `config.yaml`
-3. Update Galileo's `SOUL.md` to include the new agent in the roster
-4. Update this README
-
-## Contributing
-
-1. Fork the repo
-2. Create a feature branch
-3. Make your changes
-4. Test with `hermes profile install ./agents/<agent> --name <agent>-test`
-5. Submit a PR
+- [`docs/architecture.md`](docs/architecture.md) — how the pipeline fits together
+- [`docs/agent-roles.md`](docs/agent-roles.md) — each agent's responsibilities and boundaries
+- [`docs/setup-guide.md`](docs/setup-guide.md) — step-by-step setup
+- [`docs/extending.md`](docs/extending.md) — adding a new agent to the team
 
 ## License
 
-MIT
-
-## Links
-
-- [Hermes Agent](https://github.com/NousResearch/hermes-agent)
-- [Hermes Docs](https://hermes-agent.nousresearch.com/docs/)
-- [Profile Distributions](https://hermes-agent.nousresearch.com/docs/user-guide/profile-distributions)
+MIT © Angel Ancheta

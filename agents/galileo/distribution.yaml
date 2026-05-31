@@ -1,7 +1,7 @@
 # Galileo — Supervisor Agent Distribution
 name: galileo
-version: 1.0.0
-description: "Supervisor agent for Scaled Customer Success. Coordinates worker agents, lives in Slack, reports results in plain English."
+version: 1.1.0
+description: "Galileo — supervisor and human-facing front door for the Scaled Customer Success platform. Coordinates the worker agents (Euclid, Tycho, Curie, Kepler, Hopper), lives in Slack, and escalates to humans."
 hermes_requires: ">=0.13.0"
 author: "Angel Ancheta"
 license: "MIT"
@@ -18,3 +18,7 @@ env_requires:
   - name: SLACK_APP_TOKEN
     description: "Slack app token for Socket Mode (xapp-...)"
     required: true
+
+  - name: SLACK_ALLOWED_USERS
+    description: "Comma-separated Slack user IDs allowed to talk to Galileo (optional allowlist)"
+    required: false
