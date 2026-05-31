@@ -1,42 +1,57 @@
-# SF Reader — Salesforce Data Agent
+# Tycho — Salesforce Reader
 
-A specialized worker agent that pulls account and ticket data from Salesforce. Read-only access — never writes.
+Tycho is the read-only Salesforce data agent for the Scaled CS platform. Named for Tycho Brahe — the astronomer whose meticulous observations Kepler later interpreted — Tycho pulls raw account data faithfully and hands it off. He observes; he never interprets, cleans, or writes.
 
 ## Role
 
-The SF Reader is **precise and careful about query cost**. It:
+Tycho sits second in the pipeline: **Euclid → Tycho → Curie → Kepler → Hopper**. He:
 
-- Pulls account health data
-- Retrieves ticket history
-- Queries contact information
-- Extracts opportunity data
-- Reports findings to Galileo
+- Pulls Account, Contract, Opportunity, and Contact data via read-only SOQL
+- Reports every field exactly as Salesforce returns it (nulls stay null; nothing inferred)
+- Flags every rubric signal that does NOT live in Salesforce as `NEEDS SOURCE` (product usage, ticketing, CSAT, etc.) — the "Salesforce + flag the rest" approach
+- Hands the raw pull to Curie for integrity validation
 
-## Design Principles
+## Design principles
 
-- **Read-only access** — Cannot modify Salesforce data
-- **Query cost awareness** — Minimizes API calls, uses selective queries
-- **Structured output** — Returns data in consistent, parseable format
-- **Error handling** — Gracefully handles API limits and failures
+- **Read-only, enforced at three layers** — credential (the Salesforce user has a read-only permission set and cannot write), connector (`bin/sf_reader.py` issues SELECT only and refuses DML), and agent (SOUL + skill). Proven: a write attempt returns `CANNOT_INSERT_UPDATE_ACTIVATE_ENTITY`.
+- **Faithful, not helpful** — empty stays empty, wrong-looking stays as-is (flagged, not fixed). Faithfulness is the whole job; the moment Tycho "cleans" data, Curie's integrity check becomes meaningless.
+- **No interpretation** — Tycho reports what Salesforce says, never what it means. That is Kepler's job.
+- **Query-cost aware** — pulls only the fields the rubric needs.
+
+## Connector
+
+This distribution ships the connector at `bin/sf_reader.py`. It authenticates via **OAuth 2.0 Client Credentials** against a Salesforce **External Client App** whose Run-As user holds the read-only permission set. Commands:
+
+- `login` — authenticate and report the account count
+- `query "<SOQL>"` — run a SELECT (refuses any DML)
+- `boundary-test` — attempt a write; success would mean read-only is NOT enforced (expected result: rejected)
+
+Requires the Python packages `simple-salesforce` and `requests`.
 
 ## Installation
 
 ```bash
-hermes profile install github.com/YOUR_USERNAME/hermes-scaled-cs/agents/sf-reader --name sf-reader --alias
+hermes profile install ./agents/tycho --name tycho --alias
 ```
 
 ## Configuration
 
-Set in `~/.hermes/profiles/sf-reader/.env`:
+Set in the `tycho` profile `.env` (see `distribution.yaml` for the authoritative list):
 
 ```bash
-OPENROUTER_API_KEY=*** SALESFORCE_SECURITY_TOKEN=*** Access
+OPENROUTER_API_KEY=...
+SALESFORCE_INSTANCE_URL=https://yourco.develop.my.salesforce.com   # bare My Domain, NOT the salesforce-setup.com host
+SALESFORCE_CONSUMER_KEY=...      # External Client App consumer key
+SALESFORCE_CONSUMER_SECRET=...   # External Client App consumer secret
+```
+
+No username/password/security-token: the org has SOAP login disabled, so auth is OAuth Client Credentials only.
+
+## Access
 
 | Capability | Status |
 |------------|--------|
-| Read accounts | ✅ |
-| Read tickets | ✅ |
-| Read contacts | ✅ |
-| Read opportunities | ✅ |
-| Write any data | ❌ |
-| Delete any data | ❌ |
+| Read accounts / contracts / opportunities / contacts | yes |
+| Flag non-Salesforce signals (NEEDS SOURCE) | yes |
+| Write / update / delete any data | no (rejected at credential layer) |
+| Interpret or score data | no (that is Kepler) |

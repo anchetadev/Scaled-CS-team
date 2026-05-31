@@ -1,39 +1,31 @@
 # Tycho — Salesforce Reader Distribution
 name: tycho
-version: 1.1.0
+version: 1.2.0
 description: "Tycho — Salesforce Reader for the Scaled CS platform. Read-only, faithful data pull; pulls account data and flags signals not in Salesforce. No interpretation, no writes."
 hermes_requires: ">=0.13.0"
 author: "Angel Ancheta"
 license: "MIT"
 
-# Auth: a Salesforce Integration User (API-only, read-only permission set) via a
-# Connected App OAuth flow. The read-only boundary is enforced at the credential
-# layer (Salesforce rejects writes), the connector layer, and the agent layer.
+# Auth: OAuth 2.0 Client Credentials flow via a Salesforce External Client App
+# whose "Run As" is an Integration User with a read-only permission set. No
+# username/password/security-token — the org has SOAP login disabled. Read-only
+# is enforced at three layers: credential (the Run As user cannot write), the
+# bundled connector (bin/sf_reader.py issues SELECT-only, refuses DML), and the
+# agent (SOUL + skill). The connector ships in this distribution at bin/sf_reader.py
+# and requires the simple-salesforce and requests Python packages.
 env_requires:
   - name: OPENROUTER_API_KEY
     description: "OpenRouter API key for model access"
     required: true
 
   - name: SALESFORCE_INSTANCE_URL
-    description: "Salesforce instance / My Domain URL (e.g. https://yourco--sandbox.sandbox.my.salesforce.com)"
+    description: "Salesforce My Domain URL — bare host, e.g. https://yourco.develop.my.salesforce.com (NOT the salesforce-setup.com host)"
     required: true
 
   - name: SALESFORCE_CONSUMER_KEY
-    description: "Connected App consumer key (OAuth client id)"
+    description: "External Client App consumer key (OAuth client id)"
     required: true
 
   - name: SALESFORCE_CONSUMER_SECRET
-    description: "Connected App consumer secret (OAuth client secret)"
-    required: true
-
-  - name: SALESFORCE_USERNAME
-    description: "Integration User username (API-only, read-only permission set)"
-    required: true
-
-  - name: SALESFORCE_PASSWORD
-    description: "Integration User password"
-    required: true
-
-  - name: SALESFORCE_SECURITY_TOKEN
-    description: "Integration User security token"
+    description: "External Client App consumer secret (OAuth client secret)"
     required: true

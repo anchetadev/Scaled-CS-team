@@ -43,18 +43,21 @@ Assign exactly one to each field. Every non-`TRUSTWORTHY` verdict needs a one-li
 - `STALE` — present but too old to rely on.
 - `LOW-COVERAGE` — present but computed from too small a sample.
 - `UNCONFIRMED` — informal/free-text/human-asserted, not a maintained system field.
-- `INVALID` — wrong type, out of range, or impossible value.
-- `MISSING` — absent, null, or empty.
+- `INVALID` — wrong type, out of range, or impossible value, or internally contradictory.
+- `MISSING` — a field that *should* be present in the source system is absent, null, or empty (e.g. an Account with no Name).
+- `NO-SOURCE` — the signal lives in a system not integrated yet (product analytics, ticketing, CS platform), so there is no value to assess. This is a *coverage* gap, not a data defect. Tycho will have marked these `NEEDS SOURCE`; carry them through as `NO-SOURCE`.
+
+**The critical distinction:** `MISSING` and `INVALID` are data *defects* — the source had a value and it's absent or broken. `NO-SOURCE` is a *coverage* gap — the source system simply isn't connected yet. Never conflate them. A pull that is 80% `NO-SOURCE` but whose present fields are all sound is *trustworthy, with thin coverage* — not untrustworthy.
 
 ## Record verdict
 
-Roll the field verdicts into one:
+Roll the field verdicts into one. **The verdict is driven by data *defects* (`INVALID`/`MISSING`/`STALE`/`UNCONFIRMED` on fields that are present), NOT by coverage (`NO-SOURCE`).** Coverage gaps never, by themselves, cause a FAIL — they are the expected state until every source system is integrated, and the Data Analyst is built to score partial data and flag the rest.
 
-- `PASS` — safe to score; no material integrity problems.
-- `PASS WITH CAVEATS` — scorable, but flagged fields must be treated carefully by the Data Analyst (e.g. score with low confidence, or exclude the item).
-- `FAIL` — do not score until fixed; too many critical fields are missing/invalid to produce a meaningful result.
+- `PASS` — the present data is sound. Score it. (There may be many `NO-SOURCE` gaps — that's fine; note them.)
+- `PASS WITH CAVEATS` — the present data is scorable, but specific fields carry defects the Data Analyst must handle carefully (e.g. score with low confidence, or exclude that one item). This is the right verdict when present data has a few `INVALID`/`UNCONFIRMED`/`STALE` fields *and/or* significant `NO-SOURCE` coverage gaps. **Most real pulls land here.**
+- `FAIL` — reserve for when the present data is *too broken to trust at all*: the few fields that exist are mostly `INVALID`/contradictory, or a field essential to even identifying the record is `MISSING`. A FAIL means "re-pull, the data itself is wrong" — NOT "we haven't integrated enough systems yet."
 
-Use judgment on the threshold: a single stale non-critical field is a caveat; half the rubric's required signals missing is a fail. State your reasoning.
+Decision rule: count the *defects* among present fields. Zero defects → PASS. A handful of defects on otherwise-sound data → PASS WITH CAVEATS (caveat the specific items). The present data is mostly broken/contradictory → FAIL. `NO-SOURCE` count is reported for coverage awareness but does **not** move the verdict toward FAIL. Always state your reasoning and separate the defect count from the coverage count.
 
 ## Output structure
 
@@ -77,7 +80,7 @@ Use judgment on the threshold: a single stale non-critical field is a caveat; ha
 
 ---
 
-Validated [entity]: [N] fields, [T] trustworthy, [C] caveats, [F] failures. Verdict: [PASS/CAVEATS/FAIL].
+Validated [entity]: [N] present fields, [T] trustworthy, [D] defects (invalid/missing/stale/unconfirmed), [G] NO-SOURCE coverage gaps. Verdict: [PASS/CAVEATS/FAIL] (driven by defects, not coverage).
 ```
 
 ## Discipline
