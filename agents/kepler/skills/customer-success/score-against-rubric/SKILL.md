@@ -49,16 +49,24 @@ For every item in the rubric:
 
 Score faithfully. Do not invent criteria, reweight categories, or apply gut feel that isn't written in the rubric. The rubric is the ruler; you don't bend it.
 
-### 3. Roll up
+### 3. Roll up — on TWO separate axes
 
-Aggregate item scores into category scores, then an overall result, following the rubric's weighting. **Show the arithmetic** so the roll-up is auditable. If items were "insufficient data," state how you handled them (excluded, treated as worst-case, etc.) — don't hide the choice.
+Aggregate item scores into category scores and an overall, following the rubric's weighting. **Show the arithmetic.** If items were "insufficient data," state how you handled them (excluded, etc.) — don't hide the choice.
 
-### 4. Interpret
+Then express the result on **two independent axes. Never collapse them into one number that hides which is which:**
+
+- **Risk on available signals** — the risk band (Low / Moderate / High / Critical) implied by *only the items you could actually score*. Answers: "what does the data we DO have say?" A pile of green signals → **Low**, even if most of the rubric was unobservable.
+- **Confidence (coverage)** — how much of the rubric was observable: `scored ÷ total`, as a %. Band it: **High** (≥70% observable), **Medium** (40–69%), **Low** (<40%). Answers: "how much of the picture can we see?"
+
+These are orthogonal. A healthy account we can barely see is **Low risk / Low confidence** — NOT "Moderate risk." **A coverage gap is a visibility problem, never a risk signal. Never let missing data masquerade as risk.**
+
+### 4. Interpret — and ALWAYS say why the rating is what it is
 
 The part humans actually read. In plain English:
-- **Headline** — the one-line takeaway.
-- **What's driving it** — the 2-3 items that moved the result most.
-- **Recommended next step** — what a CSM should consider. (Recommend only; the Executor applies, with human approval.)
+- **Headline** — lead with both axes: e.g. *"Low risk on available signals; low confidence — only 29% of the rubric is observable."*
+- **Why this rating (mandatory)** — name the driver explicitly. Is any caution coming from **warning signs in the data** (signal-driven) or from **blind spots / missing data sources** (coverage-driven)? A stretched-thin CSM must tell at a glance whether this account is *actually concerning* or *just under-instrumented*. Never leave a non-"Low/High-confidence" rating unexplained.
+- **What's driving it** — the 2–3 items that moved the available-signals read most.
+- **Recommended next step** — match it to the driver: a *coverage-driven* caution calls for "integrate source X" or "confirm Y," NOT a customer intervention; a *signal-driven* risk calls for a real CS action. Don't tell a CSM to chase a healthy customer just because we can't see their product usage.
 
 ### 5. Flag
 
@@ -72,7 +80,9 @@ Three lists, always present (write "(none)" if empty):
 ```markdown
 # [Account/entity] — [Rubric name] Score
 
-**Overall: [score/result]** — [one-line headline]
+**Risk on available signals: [Low / Moderate / High / Critical]**
+**Confidence: [High / Medium / Low]** — [N of M] items observable ([X]%)
+**Why this rating:** [one line — signal-driven (warning signs in the data) vs coverage-driven (blind spots / missing sources)]
 
 ## Scores by category
 
@@ -90,11 +100,13 @@ Three lists, always present (write "(none)" if empty):
 
 ---
 
-Scored [entity] against [rubric]: overall [result], [N] items scored, [K] flagged.
+Scored [entity]: [risk band] on available signals, [confidence band] confidence ([N]/[M] observable). Caution is [signal-driven | coverage-driven | none].
 ```
 
 ## Discipline
 
+- **Two axes, never one.** Always report *risk on available signals* and *confidence/coverage* separately. A coverage gap is never reported as risk — a healthy-but-barely-visible account is "Low risk / Low confidence," not "Moderate risk."
+- **Always attribute the rating.** Any result that isn't a clean "Low risk / High confidence" states in one line whether the caution is **signal-driven** (real warning signs) or **coverage-driven** (blind spots). A CSM should never have to guess whether an account is actually at risk or just under-instrumented.
 - **Every score cites evidence.** A score with no named data point behind it is a bug.
 - **Never silently fix data.** Contradictions get flagged and kicked back, not corrected.
 - **Never silently fix the rubric.** Gaps get flagged for the Rubric Author, not patched in place.
