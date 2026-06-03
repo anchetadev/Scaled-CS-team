@@ -24,20 +24,27 @@ echo "📦 Installing agents..."
 echo ""
 
 # Install each agent
-AGENTS=("galileo" "tycho" "curie" "hopper" "euclid" "kepler")
+AGENTS=("galileo" "tycho" "curie" "hopper" "euclid" "kepler" "bell")
 
 for agent in "${AGENTS[@]}"; do
     AGENT_DIR="$AGENTS_DIR/$agent"
-    
+
     if [ ! -d "$AGENT_DIR" ]; then
         echo "⚠️  Skipping $agent — directory not found"
         continue
     fi
-    
+
     echo "→ Installing $agent..."
     hermes profile install "$AGENT_DIR" --name "$agent" --alias 2>/dev/null || {
         echo "  ⚠️  $agent may already be installed. Skipping..."
     }
+
+    # Ensure bin/ scripts (e.g. Tycho's sf_reader.py, Bell's sf_chatter.py
+    # and propose_email.py) are executable in the live profile.
+    LIVE_BIN="$HOME/.hermes/profiles/$agent/bin"
+    if [ -d "$LIVE_BIN" ]; then
+        chmod +x "$LIVE_BIN"/*.py 2>/dev/null || true
+    fi
     echo ""
 done
 
@@ -46,7 +53,7 @@ echo "║    ✅ Installation complete!                             ║"
 echo "╚═══════════════════════════════════════════════════════════╝"
 echo ""
 echo "Installed agents:"
-hermes profile list | grep -E "galileo|tycho|curie|hopper|euclid|kepler" || true
+hermes profile list | grep -E "galileo|tycho|curie|hopper|euclid|kepler|bell" || true
 echo ""
 echo "Next steps:"
 echo "  1. Set up API keys in each agent's .env file"
@@ -54,3 +61,4 @@ echo "  2. Start Galileo's gateway: hermes gateway start -p galileo"
 echo "  3. Chat with Galileo: hermes -p galileo"
 echo ""
 echo "For setup instructions, see: docs/setup-guide.md"
+echo "For Bell's Operator Surface integration: docs/operator-surface-integration.md"
