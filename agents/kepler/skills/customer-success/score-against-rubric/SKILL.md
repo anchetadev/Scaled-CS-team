@@ -1,7 +1,7 @@
 ---
 name: score-against-rubric
 description: "Score validated CS account data against a rubric and the canonical Customer Health Score model (SOP 4.1). Two-axis output (risk-on-available-signals × confidence/coverage) plus a pillar-by-pillar breakdown citing the source SOP, plus a TL;DR for Galileo to relay."
-version: 0.2.1
+version: 0.3.0
 author: anchetadev
 license: MIT
 platforms: [linux, macos, windows]
@@ -188,6 +188,40 @@ The TL;DR is mandatory. The full breakdown is for audit; the TL;DR is for human 
 
 [3–5 sentence summary with MHS, biggest drag, scenario pattern, recommended next playbook + which agent should drive it]
 ```
+
+
+## Wrap-safe output format (v1.4.4+)
+
+**Render record / per-field / per-item data as bullet lists with bold keys — NOT as fenced code blocks.** Code blocks don't word-wrap; even modest-length lines (~80 chars) overflow narrow chat surfaces (the local Galileo tab, Slack mobile, embedded viewers) and force horizontal scrolling. Bullet lists wrap at any container width.
+
+### The pattern
+
+```markdown
+- **Field name:** value *(optional parenthetical note)*
+- **Another field:** value
+```
+
+### Examples
+
+❌ DON'T (overflows in narrow UIs):
+```
+Account.LastActivityDate  2026-04-17                          (48 days stale)
+```
+
+✅ DO (wraps everywhere):
+```markdown
+- **Account.LastActivityDate:** 2026-04-17 *(48 days stale)*
+```
+
+### When code blocks ARE still correct
+
+- Small fixed-width reference tables that fit (e.g. a 3-column rubric mapping with short labels)
+- Short command examples (`tycho -z "..."`)
+- Tycho's terminal command outputs being echoed back for the Validator
+- JSON payloads under ~70 chars per line
+
+For variable-width record data (the bulk of pipeline output), use bullets.
+
 
 ## Discipline
 

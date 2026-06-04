@@ -1,7 +1,7 @@
 ---
 name: agent-dispatch
 description: "Send work to one of Galileo's persistent worker agents and relay the result back to the team."
-version: 0.4.0
+version: 0.5.0
 author: anchetadev
 license: MIT
 platforms: [linux, macos, windows]
@@ -234,7 +234,7 @@ The TL;DR goes at the **TOP** of your final message, not the bottom. The user sh
 
 1. **One framing line of your own** — "Here's the audit on Avalon Auto, full detail below:" or similar.
 2. **The TL;DR section**, labeled exactly `## TL;DR` — 3–5 sentences summarizing the score / verdict / what to do next, with SOP citations. If a worker (Kepler / Curie) emitted a TL;DR in their own output, use theirs verbatim. **If no worker emitted one, YOU compose one** from the per-stage outputs before you relay. The TL;DR is non-negotiable; it does not depend on whether any individual worker remembered it.
-3. **Per-stage detail** below the TL;DR — each stage in its own labeled section (STAGE 1 — TYCHO, STAGE 2 — CURIE, etc.), each wrapped in a fenced code block. This is the audit-grade detail anyone can drill into.
+3. **Per-stage detail** below the TL;DR — each stage in its own labeled section (STAGE 1 — TYCHO, STAGE 2 — CURIE, etc.), each rendered as bullet lists with bold field names. **Do NOT wrap stages in fenced code blocks** — code blocks overflow narrow chat surfaces horizontally; bullet lists wrap at any width. The workers' outputs (since v1.4.4) already emit bullet format; preserve it as-is, do not re-wrap. This is the audit-grade detail anyone can drill into.
 4. **No closing summary at the bottom.** The TL;DR is at the top — repeating it at the bottom is redundant token cost. Just end after the last stage's detail.
 
 ### Why this order
