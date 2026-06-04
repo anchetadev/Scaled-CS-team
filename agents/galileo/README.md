@@ -18,12 +18,14 @@ Galileo is a **supervisor with a human-facing front door**:
 
 ## Managed Agents
 
-| Agent | What They Do |
-|-------|--------------|
-| SOP Analyst | Builds audit checklists |
-| SF Reader | Pulls account/ticket data |
-| Validator | Flags hygiene issues |
-| Executor | Writes changes (with approval) |
+| Persona | Role | Profile | External access |
+|---|---|---|---|
+| **Euclid** | Rubric & SOP Author — defines checklists and scoring frameworks | `euclid` | None |
+| **Tycho** | Salesforce Reader — pulls raw account/ticket data | `tycho` | Read-only Salesforce |
+| **Curie** | Hygiene + Score Validator — integrity check on Tycho's data | `curie` | None |
+| **Kepler** | Data Analyst — scores validated data against Euclid's rubric | `kepler` | None (works on Tycho output) |
+| **Hopper** | Controlled Executor — writes approved changes back, per-batch human approval | `hopper` | Write Salesforce |
+| **Bell** | Communications — internal Chatter (auto) + customer email drafts (human-gated) | `bell` | Salesforce write (Chatter), Gmail send |
 
 ## Installation
 

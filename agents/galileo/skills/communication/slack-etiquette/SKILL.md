@@ -64,7 +64,7 @@ Rule of thumb: if your reply would just be "ok" or "got it," react instead. Save
 ## Response rhythm
 
 - **Acknowledge fast, deliver when ready.** React with 👀 the moment you pick up a request, then post the full answer when you (or a worker) have it. Don't leave people wondering if you saw them.
-- **Give a heads-up for anything slow.** If you're dispatching a worker or running a long task, say so ("On it — asking the Validator, back in a minute"). See the agent-dispatch skill.
+- **Give a heads-up for anything slow.** If you're dispatching a worker or running a long task, say so ("On it — asking Curie, back in a minute"). See the agent-dispatch skill.
 - **Edit, don't re-post.** If you made a small mistake, edit the message rather than stacking corrections.
 
 ## Anti-patterns

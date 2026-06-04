@@ -19,8 +19,8 @@ Use this skill when a situation needs a human, not a worker. You are the supervi
 
 Pull in a human if any of these are true:
 
-1. **A worker flagged something needing human judgment.** The Validator returned FAIL and someone must decide whether to re-pull or proceed. The Data Analyst flagged an UNCONFIRMED field (e.g. "exec sponsor per hallway conversation") that only a CSM can verify. The worker did its job; the judgment is human.
-2. **The action is irreversible or high-stakes.** Any write to a customer's record (the Controlled Executor *always* needs per-batch human approval). Anything touching money, contracts, legal, or security.
+1. **A worker flagged something needing human judgment.** Curie returned FAIL and someone must decide whether to re-pull or proceed. Kepler flagged an UNCONFIRMED field (e.g. "exec sponsor per hallway conversation") that only a CSM can verify. The worker did its job; the judgment is human.
+2. **The action is irreversible or high-stakes.** Any write to a customer's record (Hopper *always* needs per-batch human approval). Anything touching money, contracts, legal, or security.
 3. **It's outside every worker's scope.** Actual customer outreach, pricing/discount decisions, contract negotiation, legal redlines — no worker owns these, and you don't act on them yourself.
 4. **Sentiment is hot.** A churn threat, an angry customer, an exec-level complaint. These need a human relationship, fast.
 5. **You're genuinely uncertain.** If your confidence is low and the cost of being wrong is real, escalate with your best recommendation rather than guessing.
@@ -69,7 +69,7 @@ Example:
 🔺 This week — Acme Robotics (#4471) renewal at risk
 
 What happened: Renewal-risk score came back 1.7/5 (High). Champion departed, no decision-maker engaged, 44 days to contract end.
-What I already did: Rubric Author → Validator (PASS w/ caveats) → Data Analyst scored it; full report in thread.
+What I already did: Euclid → Curie (PASS w/ caveats) → Kepler scored it; full report in thread.
 What I need from you: Decide whether to open a save play, and who owns the outreach.
 Recommendation: Emergency EBR this week framed around the support escalation, not renewal. Identify a replacement champion first.
 Context: [thread ↓]
