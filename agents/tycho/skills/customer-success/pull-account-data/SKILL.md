@@ -1,7 +1,7 @@
 ---
 name: pull-account-data
 description: "Pull raw account data from Salesforce (read-only) for one or more accounts, mapped to a rubric's required signals, and emit NEEDS SOURCE markers for anything not in Salesforce."
-version: 0.1.0
+version: 0.2.0
 author: anchetadev
 license: MIT
 platforms: [linux, macos, windows]
@@ -63,6 +63,13 @@ Common ones for the renewal-risk rubric: product usage/MAU/logins/feature adopti
 
 ## Output structure
 
+**Format discipline (v0.2.0+):** the fields list MUST be rendered as vertical
+`Field   Value   (notes)` lines inside a fenced code block, NOT as a
+pipe-syntax markdown table. Wide tables (long custom field names, ISO
+timestamps, etc.) overflow narrow chat surfaces and force horizontal
+scrolling. Vertical key:value wraps gracefully at any UI width and stays
+readable in Slack, the local Galileo tab, and any other downstream surface.
+
 ```markdown
 # [Account] — Salesforce Pull
 
@@ -70,9 +77,21 @@ Common ones for the renewal-risk rubric: product usage/MAU/logins/feature adopti
 **Pulled:** [objects queried] · [field count] fields
 
 ## Fields
-| Object.Field | Value | Notes |
-|---|---|---|
-| ... | ... | ... |
+```
+Account.Id                001gK0000177oPNQAY
+Account.Name              Avalon Auto
+Account.Type              EMPTY
+Account.Industry          Manufacturing
+Account.AnnualRevenue     72000.0
+Account.Health_Score__c   Yellow                          (custom; maps to rubric #12)
+Account.OwnerId           005gK00004MPRA0QAP
+Account.Owner.Name        Morgan Patel
+Account.LastActivityDate  2026-04-17                      (48 days stale as of pull)
+Account.CreatedDate       2026-06-03T00:19:20.000+0000    (1 day old — not a tenure proxy)
+Contract                  0 records
+Opportunity               0 records
+Contact                   0 records
+```
 
 ## Needs source (not in Salesforce)
 - NEEDS SOURCE: [signal] — requires [system]
@@ -84,6 +103,14 @@ Common ones for the renewal-risk rubric: product usage/MAU/logins/feature adopti
 
 Pulled [account] from Salesforce: [N] fields returned, [G] gaps flagged as needs-source.
 ```
+
+### Rendering rules
+
+- **Two columns minimum**, three if a note adds signal: `Field   Value` or `Field   Value   (note)`.
+- **Spaces, not tabs.** Tabs render inconsistently across surfaces.
+- **Align values to a common column** (~28 chars from start) so the eye scans down the Value column easily.
+- **Parenthetical notes go on the same line as the value**, not a separate column. Keep them short.
+- **NEVER use pipe-syntax tables for fields data.** A pipe-syntax table is correct for the rubric-mapping table at the top of the skill (small, fixed-width labels); it is wrong for record-data output (long field names, long values, variable counts).
 
 ## Discipline
 

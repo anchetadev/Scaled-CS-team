@@ -1,7 +1,7 @@
 ---
 name: agent-dispatch
 description: "Send work to one of Galileo's persistent worker agents and relay the result back to the team."
-version: 0.3.0
+version: 0.4.0
 author: anchetadev
 license: MIT
 platforms: [linux, macos, windows]
@@ -226,3 +226,40 @@ When a worker (especially Kepler or Curie) returns a long structured response wi
 
 Don't paste a 200-line scorecard as the main message. The TL;DR exists exactly so the main message can stay scannable.
 
+## Inverted pyramid relay (v1.4.3+)
+
+The TL;DR goes at the **TOP** of your final message, not the bottom. The user should see the takeaway in the first paragraph they read — not after scrolling past 100 lines of per-stage detail.
+
+### Order
+
+1. **One framing line of your own** — "Here's the audit on Avalon Auto, full detail below:" or similar.
+2. **The TL;DR section**, labeled exactly `## TL;DR` — 3–5 sentences summarizing the score / verdict / what to do next, with SOP citations. If a worker (Kepler / Curie) emitted a TL;DR in their own output, use theirs verbatim. **If no worker emitted one, YOU compose one** from the per-stage outputs before you relay. The TL;DR is non-negotiable; it does not depend on whether any individual worker remembered it.
+3. **Per-stage detail** below the TL;DR — each stage in its own labeled section (STAGE 1 — TYCHO, STAGE 2 — CURIE, etc.), each wrapped in a fenced code block. This is the audit-grade detail anyone can drill into.
+4. **No closing summary at the bottom.** The TL;DR is at the top — repeating it at the bottom is redundant token cost. Just end after the last stage's detail.
+
+### Why this order
+
+Real CS exec summaries are inverted pyramid: takeaway first, evidence below. A reader who has 10 seconds gets the answer in the first paragraph; a reader who has 10 minutes scrolls. Your current "stages first, summary last" reads as a data dump even when the content is excellent.
+
+### Example shape
+
+```
+Here's the renewal-risk audit on Avalon Auto — full pipeline detail below.
+
+## TL;DR
+
+Avalon Auto = MODERATE risk on available signals, LOW confidence (17%, only 4 of 24 rubric items observable). The caution is **coverage-driven, not signal-driven** — 3 core SFDC objects returned 0 records on an account 1 day old, so we cannot distinguish a healthy new account from a silently neglected one. Curie's verdict: PASS WITH CAVEATS (2 defects, 0 SOP violations, 18 NO-SOURCE coverage gaps). Per SOP 2.3, the 48-day stale CSM activity on a Yellow account is itself a signal — Morgan Patel should log a touchpoint within 7 days. Recommend re-pull after Account.Type is populated and Contract/Opp records land.
+
+STAGE 1 — TYCHO (Salesforce Pull)
+[code block]
+
+STAGE 2 — CURIE (Data Integrity)
+[code block]
+
+STAGE 3 — KEPLER (Scorecard)
+[code block]
+```
+
+### TL;DR safety net (NEW in v1.4.3)
+
+If Kepler or Curie's output does NOT contain a `## TL;DR` section (Mimo sometimes drops it despite the skill mandate), you compose one yourself from their full outputs. Do not relay a pipeline run without a TL;DR — that is the entire point of the v1.4.0 contract. Your composition does not need to repeat every detail; it needs the score / verdict, the biggest 1–2 drivers with SOP cites, and the recommended next action.
