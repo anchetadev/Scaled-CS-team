@@ -1,7 +1,7 @@
 ---
 name: agent-dispatch
 description: "Send work to one of Galileo's persistent worker agents and relay the result back to the team."
-version: 0.6.0
+version: 0.7.0
 author: anchetadev
 license: MIT
 platforms: [linux, macos, windows]
@@ -125,15 +125,50 @@ Belt-and-suspenders. The skill is the canon; the dispatch prompt is the reinforc
 
 ## Relay discipline — never expose filesystem paths
 
-If a worker's output ends with anything like *"Artifacts at /home/hermes/runs/..."* or *"Full report at /tmp/..."* — **DO NOT relay that path to the human.** The audience cannot see your droplet; even seeing the path leaks infrastructure and breaks the demo illusion of a real CS tool.
+### Hard requirement (verify before sending)
 
-Instead:
+**Scan your output for ANY filesystem path before you send. If your response contains a string matching `/home/hermes/`, `/tmp/`, `~/`, `/runs/`, `/botfather/`, `~/.hermes/`, or any other server-side path, DELETE THAT LINE and rewrite the surrounding sentence. NO EXCEPTIONS.**
 
-1. **Open the artifact yourself** — you have terminal access; `cat` the file.
-2. **Paste the artifact content inline** in a thread reply (or a second message), wrapped in a fenced code block so it renders cleanly.
-3. **Your main response** stays the worker's TL;DR + your one-line summary. The thread / follow-up message carries the full artifact.
+The user cannot see your droplet. Filesystem paths leak infrastructure and break the demo illusion of a real CS tool. This is a bright-line safety rule like Bell's never-send-customer-email-without-approval — code-level discipline, not aspirational guidance.
 
-A customer-facing surface should never display filesystem paths. This is part of the bright line — like Bell doesn't send customer email without approval, you don't expose infrastructure. If a worker insists on writing to disk for audit, fine — but the path is for your eyes only, not the audience's.
+### Forbidden patterns (concrete)
+
+These exact phrasings have leaked in past runs. NEVER emit any of them:
+
+- ❌ `"All three artifacts live at /home/hermes/runs/..."`
+- ❌ `"Full report saved to /tmp/..."`
+- ❌ `"Artifacts at /home/hermes/..."`
+- ❌ `"See ~/botfather/status/... for the full ledger"`
+- ❌ `"The scorecard is in /home/hermes/runs/<account>/..."`
+- ❌ ANY sentence whose information value depends on the user being able to read your filesystem.
+
+### Why this is wrong even when the path is "for reference"
+
+The full artifact content is **already inline in your response** — TL;DR at the top, per-stage detail in bullet lists below. The user has everything they need in the chat. Telling them "files also exist at <path>" adds zero value to them (they can't open it) and exposes infrastructure (a bad actor would learn your filesystem layout).
+
+If you feel the urge to mention "the artifacts also live somewhere," resist it. The chat **is** the artifact for the user.
+
+### What you DO say instead
+
+If a worker's stage detail is too long to inline (rare — most pipeline outputs fit), summarize in the stage section and stop. Don't promise to deliver "the full version" — the workers already produced everything that matters; trim what you must to fit, but don't reference a path the user can't reach.
+
+If a user explicitly asks for the raw file ("can you send me the underlying data?"), respond: *"The full output is what you see above — there is no separate file the audience can download. If you want a copy to share, copy the chat content directly."* Honest, no leak.
+
+### Self-check before sending
+
+Before sending any pipeline response, scan the **last 3 sentences** of your message for any of these substrings:
+
+```
+/home/hermes
+/tmp/
+~/
+/runs/
+/botfather
+~/.hermes
+```
+
+If you find any match, DELETE THAT SENTENCE. If after deletion the closing reads abruptly, the closing is supposed to be the last STAGE section's last bullet — there is no closing paragraph in the inverted pyramid relay (see "Inverted pyramid relay" above).
+
 
 ## Worker output relay — TL;DR first, detail in thread
 
