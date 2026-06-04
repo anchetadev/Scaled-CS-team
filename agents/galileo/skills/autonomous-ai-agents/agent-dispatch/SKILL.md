@@ -1,7 +1,7 @@
 ---
 name: agent-dispatch
 description: "Send work to one of Galileo's persistent worker agents and relay the result back to the team."
-version: 0.5.0
+version: 0.6.0
 author: anchetadev
 license: MIT
 platforms: [linux, macos, windows]
@@ -105,94 +105,13 @@ After a dispatch, remember:
 
 
 
-## Pipeline narration cadence (v1.4.2+)
+## Live updates between dispatches — design note (removed v1.4.5)
 
-**For any multi-worker pipeline run, emit short status updates as you progress.** Don't go silent for 5 minutes and then dump a wall of text. The user wants to feel the work happening, the way they would watching a CSM coordinate a real team — and the way a Claude Code session narrates "Now I'm doing X" between tool calls.
+A "pipeline narration cadence" was attempted in v1.4.2 — Galileo would emit short status messages ("Tycho ✓ — 8 fields", "→ Curie running...") between worker dispatches so the user would feel the work progressing. It was removed in v1.4.5 after live testing showed the local Galileo tab UI **buffers the full response** rather than streaming, so any narration content arrived all at once at the end alongside the full output. Same wallclock, no perceived improvement.
 
-### The cadence
+**The real path to live updates** is hooking the front-end into the worker ledger at `/home/hermes/botfather/status/active.jsonl` — workers already write `ack` / `progress` / `done` events to that file (see the `coordination-protocol` skill), and a UI subscriber can render them independent of whatever Galileo is doing. That's a UI-side change, not a Galileo-side change.
 
-1. **Announce on start** — one short message: the goal, the ETA, and the first worker.
-2. **Acknowledge each worker as it returns** — one short message: what just finished (headline number/finding only), then the next worker.
-3. **Final composition** — the TL;DR + full detail per the existing relay discipline. This is the result, not a status update.
-
-Total for a 5-worker pipeline: ~4 status messages + 1 final composition.
-
-### Cost discipline (NON-NEGOTIABLE)
-
-- **One line max per status message.** Two only if absolutely needed (one for "X ✓", one for "→ next").
-- **NEVER re-list a worker's full output in a status message.** That repetition explodes token cost and drowns the signal. The full output goes ONLY in the final composition.
-- **Forward-looking and specific.** "Tycho is working on it" — useless, no signal. "Tycho ✓ — 24 fields, 17 NO-SOURCE flagged" — useful, concrete.
-- **No status narration for single-worker dispatches.** A one-off Bell follow-up doesn't need narration. Narrate only for genuine multi-step pipelines (2+ workers in sequence).
-
-### What "✓" means in narration
-
-The worker has returned its result and you have read it (per the existing read-before-relay discipline). It does NOT mean you have validated the result or composed a recommendation yet — that is what the final message is for. The ✓ is just "this stage is done."
-
-### Worked example — full 5-worker renewal-risk pipeline
-
-```
-On it — full renewal-risk audit on Avalon Auto. ~5 min.
-→ Euclid confirming the rubric exists.
-```
-
-```
-Euclid ✓ — renewal-risk rubric ready (24 items, 4 categories).
-→ Tycho pulling Salesforce pillar fields.
-```
-
-```
-Tycho ✓ — 24 fields pulled, 17 NO-SOURCE flagged.
-→ Curie running hygiene + integrity checks.
-```
-
-```
-Curie ✓ — PASS WITH CAVEATS, 2 SOP violations.
-→ Kepler scoring against canonical SOP 4.1 model.
-```
-
-```
-Kepler ✓ — MHS 56 (Red), Lost Champion pattern matched.
-→ Composing summary.
-```
-
-```
-[Final TL;DR + full detail, per the existing relay discipline]
-```
-
-### Worked example — 3-step Bell pipeline (meeting follow-up)
-
-```
-On it — Pyramid Construction meeting follow-up. ~2 min.
-→ Bell reading the transcript.
-```
-
-```
-Transcript read ✓ — 4 decisions, 2 risks, 3 action items extracted.
-→ Posting internal Chatter recap to Opp 006xxxxx.
-```
-
-```
-Chatter posted ✓ — FeedItem id 0D5xxxxxxx.
-→ Drafting customer follow-up email for CSM approval.
-```
-
-```
-[Draft + Operator Surface approval link]
-```
-
-### Self-check before sending each status message
-
-Before you emit a status line, scan it:
-- Is it one line? (Two only if truly needed.)
-- Does it have a concrete number or finding? (Not vague "working on it.")
-- Does it say what is next?
-- Are you about to repeat content from a prior message or a worker's output? (If yes, cut it.)
-
-If any check fails, tighten before sending.
-
-### Why this matters
-
-Five minutes of silence followed by 200 lines of structured output reads as "the agent froze, then dumped everything." Five short progress messages over the same five minutes reads as "the team is coordinating in real time and I can see what is happening." The wallclock is the same. The user experience is not.
+For now: focus on the **TL;DR-first inverted pyramid** (below) — when the response lands, the takeaway is the first thing the user reads. That is the responsiveness improvement we can deliver from the agent side.
 
 ## v1.4.0+ dispatch reminders (Kepler / Curie)
 
