@@ -1,7 +1,7 @@
 ---
 name: score-against-rubric
 description: "Score validated CS account data against a rubric and the canonical Customer Health Score model (SOP 4.1). Two-axis output (risk-on-available-signals × confidence/coverage) plus a pillar-by-pillar breakdown citing the source SOP, plus a TL;DR for Galileo to relay."
-version: 0.2.0
+version: 0.2.1
 author: anchetadev
 license: MIT
 platforms: [linux, macos, windows]
@@ -16,6 +16,29 @@ metadata:
 Use this skill when Galileo dispatches account data plus a rubric (or asks for a canonical health score) and asks you to score it. You apply the rubric mechanically, cite the evidence behind every score, roll up to the canonical Master Health Score where pillar fields are available, interpret what it means in plain English, and end with a TL;DR Galileo can post directly.
 
 Load this when Galileo says things like "score this account", "what does this data mean for account X", "run the health rubric", or hands you a rubric + data together.
+
+
+## Hard requirements (verify before sending)
+
+**Three outputs are NOT optional. If they're not in your response, you have not completed the task. Before sending, scan your output and confirm all three are present — if any are missing, add them now.**
+
+1. **Every score has an inline SOP citation in brackets.** No bare numbers. Format examples:
+   - ❌ `Sentiment: 0.01`
+   - ✅ `Sentiment: Customer_Sentiment__c=Unknown → 0.01 [SOP 4.1 Pillar 1, Sub-Score 2; also SOP 2.5a §2 violation]`
+   - ✅ `CRM health score: 3/5 [Rubric §12]`
+   - ✅ `Lost Champion flag, 18d stale [SOP 2.3 §4]`
+   - ✅ Scenario pattern match: `[per blueprint §13 — "yellow band trending down + no Save Plan"]`
+
+2. **A `## TL;DR (for Galileo to relay)` section at the very end.** Exactly that heading, exactly that format. 3–5 sentences. Names the account, the score / verdict, the biggest 1–2 drivers with SOP cites, and the recommended next playbook + which agent should drive it. Galileo posts this verbatim to the human; everything above it is for audit.
+
+3. **Tables rendered as fenced code blocks** (triple backticks). Many chat surfaces (Slack, custom web UIs) don't render markdown tables natively — pipe-syntax becomes an unreadable wall of text. Wrap every table in ``` so the column alignment survives. Example:
+   ```
+   | Pillar       | Score | Weight | Contribution |
+   |--------------|-------|--------|--------------|
+   | Engagement   | 0.29  | 20%    | 0.058        |
+   ```
+
+**Self-check before sending.** Search your output for: (a) `## TL;DR` literally present at the end; (b) every score has a bracketed citation; (c) every table is wrapped in ```. If any check fails, fix it before you return.
 
 ## When NOT to use
 

@@ -1,7 +1,7 @@
 ---
 name: agent-dispatch
 description: "Send work to one of Galileo's persistent worker agents and relay the result back to the team."
-version: 0.1.0
+version: 0.2.0
 author: anchetadev
 license: MIT
 platforms: [linux, macos, windows]
@@ -102,3 +102,37 @@ After a dispatch, remember:
 - Which worker handled what kind of request — pattern-match faster next time.
 - Worker output quirks you've had to correct — surface in a checkpoint with the user if a pattern emerges.
 - Pipelines that worked end-to-end — these are templates for future runs.
+
+
+## v1.4.0+ dispatch reminders (Kepler / Curie)
+
+When you dispatch to Kepler or Curie, include these instructions in your prompt. The skills themselves require them, but reminding in-prompt makes Mimo dramatically more reliable about following through:
+
+- `"End your output with a '## TL;DR (for Galileo to relay)' section per the v1.4.0 contract — 3–5 sentences I can post verbatim."`
+- `"Cite every score / verdict with the relevant SOP section inline in brackets (e.g. [SOP 4.1 Pillar 1, Sub-Score 2], [SOP 2.5a §2], [SOP 2.3 §4])."`
+- `"Render every table as a fenced code block (triple backticks) so column alignment survives in the chat surface."`
+
+Belt-and-suspenders. The skill is the canon; the dispatch prompt is the reinforcement.
+
+## Relay discipline — never expose filesystem paths
+
+If a worker's output ends with anything like *"Artifacts at /home/hermes/runs/..."* or *"Full report at /tmp/..."* — **DO NOT relay that path to the human.** The audience cannot see your droplet; even seeing the path leaks infrastructure and breaks the demo illusion of a real CS tool.
+
+Instead:
+
+1. **Open the artifact yourself** — you have terminal access; `cat` the file.
+2. **Paste the artifact content inline** in a thread reply (or a second message), wrapped in a fenced code block so it renders cleanly.
+3. **Your main response** stays the worker's TL;DR + your one-line summary. The thread / follow-up message carries the full artifact.
+
+A customer-facing surface should never display filesystem paths. This is part of the bright line — like Bell doesn't send customer email without approval, you don't expose infrastructure. If a worker insists on writing to disk for audit, fine — but the path is for your eyes only, not the audience's.
+
+## Worker output relay — TL;DR first, detail in thread
+
+When a worker (especially Kepler or Curie) returns a long structured response with a TL;DR at the end:
+
+1. Post the TL;DR as your main message (with one line of your own framing — "Here's what Kepler found:").
+2. Post the full detail as a thread reply or follow-up message, wrapped in a code block.
+3. Audience reads the TL;DR; anyone who wants to drill in can scroll the thread.
+
+Don't paste a 200-line scorecard as the main message. The TL;DR exists exactly so the main message can stay scannable.
+

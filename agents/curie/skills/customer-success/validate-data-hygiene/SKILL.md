@@ -1,7 +1,7 @@
 ---
 name: validate-data-hygiene
 description: "Integrity-check CS account data before scoring. Six lenses (completeness, freshness, validity, consistency, provenance, coverage) PLUS canonical CSM Data Hygiene SOP 2.5a checks and Risk Flag SOP 2.3 discipline. Outputs per-field verdicts, a record verdict, and a TL;DR Galileo can relay."
-version: 0.2.0
+version: 0.2.1
 author: anchetadev
 license: MIT
 platforms: [linux, macos, windows]
@@ -18,6 +18,23 @@ Use this skill when Galileo dispatches a batch of account data and asks whether 
 Beyond the six generic integrity lenses, you also apply the **CSM Data Hygiene SOP (2.5a)** and the **Risk Flag SOP (2.3)** — the org's canonical checklists for what "clean SFDC" actually means. Your findings cite those SOPs directly so the operator can act inside Salesforce immediately.
 
 Load this when Galileo says things like "validate this data", "is this account data clean?", "check this before scoring", "run hygiene on these records", or hands you Reader output headed for the Data Analyst.
+
+
+## Hard requirements (verify before sending)
+
+**Three outputs are NOT optional. If they're not in your response, you have not completed the task. Before sending, scan your output and confirm all three are present — if any are missing, add them now.**
+
+1. **Every non-trustworthy verdict has an inline SOP citation in brackets** where one applies. Format examples:
+   - ❌ `Customer_Sentiment__c: SOP-VIOLATION — needs updating`
+   - ✅ `Customer_Sentiment__c=Unknown → SOP-VIOLATION [SOP 2.5a §2] — update in SFDC; any meaningful interaction qualifies. Will compute as 0.01 per SOP 4.1 Pillar 1.`
+   - ✅ `Risk_Flag__c (Lost Champion, 18d active, no Chatter update) → SOP-VIOLATION [SOP 2.3 §4 — stale Active flag > 14d]`
+   - ✅ `LastActivityDate 48 days stale → STALE [SOP 2.5a §4 — monthly EB interaction check]`
+
+2. **A `## TL;DR (for Galileo to relay)` section at the very end.** Exactly that heading. 3–5 sentences. Names the account, the verdict (PASS / PASS WITH CAVEATS / FAIL), the count of defects vs SOP violations vs NO-SOURCE gaps separately, the top 1–2 fix-it actions with specific SFDC field + value to set, and whether Kepler can proceed to score. Galileo posts this verbatim to the human; everything above it is for audit.
+
+3. **Tables rendered as fenced code blocks** (triple backticks). Many chat surfaces (Slack, custom web UIs) don't render markdown tables natively — pipe-syntax becomes an unreadable wall of text. Wrap every table in ``` so the column alignment survives.
+
+**Self-check before sending.** Search your output for: (a) `## TL;DR` literally present at the end; (b) every non-trustworthy verdict has a bracketed citation or a stated reason no SOP applies; (c) every table is wrapped in ```. If any check fails, fix it before you return.
 
 ## When NOT to use
 
