@@ -150,6 +150,38 @@ def sf_client():
     return SalesforceWriter.from_env(load_env())
 
 
+
+def operator_email(operator_id):
+    """Resolve a Supabase auth.users id to its email.
+
+    Used by handlers that need to attribute a Salesforce write back to the
+    human who clicked Approve. Falls back to env DEFAULT_OPERATOR_EMAIL
+    (set in ~/.hermes/profiles/hopper/.env) when the auth admin lookup
+    fails — so the demo keeps working even if the auth user is rotated.
+
+    Returns None when no email can be resolved; callers MUST tolerate that
+    and leave OwnerId unset (SF will default to the OAuth Run-As user).
+    """
+    env = load_env()
+    fallback = env.get("DEFAULT_OPERATOR_EMAIL") or None
+    if not operator_id:
+        return fallback
+    need(env, "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY")
+    url = env["SUPABASE_URL"].rstrip("/") + "/auth/v1/admin/users/" + operator_id
+    r = urllib.request.Request(url, method="GET")
+    r.add_header("apikey", env["SUPABASE_SERVICE_ROLE_KEY"])
+    r.add_header("Authorization", "Bearer " + env["SUPABASE_SERVICE_ROLE_KEY"])
+    try:
+        with urllib.request.urlopen(r, timeout=10) as resp:
+            user = json.loads(resp.read())
+            email = user.get("email")
+            if email:
+                return email
+    except Exception:
+        pass
+    return fallback
+
+
 # ---------------- action_type handlers ----------------
 #
 # Contract: each handler takes (sf, approval) and returns a dict with at least
@@ -168,8 +200,16 @@ def h_create_task(sf, approval):
         "Status": "Not Started",
         "WhatId": approval.get("target_record_id") or pv.get("related_record"),
     }
-    if pv.get("assigned_to"):
-        fields["OwnerId"] = sf.user_id_for_email(pv["assigned_to"])
+    # Owner resolution (in priority order):
+    #   1. explicit proposed_value.assigned_to (Galileo assigns to a teammate)
+    #   2. fall back to the human who approved (decided_by -> auth user -> email)
+    #   3. fall back to env DEFAULT_OPERATOR_EMAIL
+    #   4. leave OwnerId unset (SF defaults to OAuth Run-As user)
+    owner_email = pv.get("assigned_to") or operator_email(approval.get("decided_by"))
+    if owner_email:
+        owner_uid = sf.user_id_for_email(owner_email)
+        if owner_uid:
+            fields["OwnerId"] = owner_uid
     fields = {k: v for k, v in fields.items() if v is not None}
     result = sf.create("Task", fields)
     return {
