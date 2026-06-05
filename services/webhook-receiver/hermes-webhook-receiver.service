@@ -1,0 +1,23 @@
+[Unit]
+Description=Hermes webhook receiver — HTTP endpoint Operator-Surface posts to on approval decisions
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=%h/.hermes/secrets/webhook.env
+# galileo lives in ~/.local/bin/ — make sure systemd's PATH includes it
+Environment=PATH=%h/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/usr/bin/python3 %h/hermes-scaled-cs/services/webhook-receiver/receiver.py
+Restart=on-failure
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hermes-webhook-receiver
+
+# Don't let it run away — modest resource caps
+MemoryMax=256M
+TasksMax=64
+
+[Install]
+WantedBy=default.target
