@@ -252,7 +252,7 @@ def cmd_propose(payload_json):
         "target_record_id": p["target_record_id"],
         "current_value": p.get("current_value"),
         "proposed_value": p["proposed_value"],
-        "rationale": p.get("rationale", "Drafted by Galileo as part of the orchestration."),
+        "rationale": p.get("rationale", "Drafted as part of the orchestration."),
         "status": "pending",
         "metadata": {
             "drafted_by": "galileo",

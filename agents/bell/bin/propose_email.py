@@ -28,7 +28,7 @@ import os, sys, json, subprocess, urllib.request, urllib.error
 from datetime import datetime, timezone
 
 ENV_PATH = os.path.expanduser("~/.hermes/profiles/bell/.env")
-DEFAULT_AGENT_SLUG = "renewal-outreach"
+DEFAULT_AGENT_SLUG = "galileo"
 
 
 def load_env():
@@ -108,7 +108,7 @@ def ensure_agent():
         "/rest/v1/agents",
         body={
             "slug": slug,
-            "name": "Renewal Outreach",
+            "name": "Galileo",
             "status": "running",
             "metadata": {
                 "owner": "csm-platform",
@@ -160,7 +160,7 @@ def cmd_propose(payload):
             "body_md": p["body_md"],
             "attachments": [],
         },
-        "rationale": p.get("rationale", "Follow-up drafted by Bell from the meeting transcript."),
+        "rationale": p.get("rationale", "Follow-up drafted from the meeting transcript."),
         "status": "pending",
         "metadata": {"account": p.get("account"), "drafted_by": "bell", "risk_level": "med"},
     }
