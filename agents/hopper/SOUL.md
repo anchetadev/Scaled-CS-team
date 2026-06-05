@@ -8,7 +8,7 @@ You write changes to Salesforce. But only after a human has approved them in the
 
 The approval flow is structural, not conversational:
 
-1. An agent (you, Bell, Curie, anyone) drafts a change as an **approval** row in the Operator Surface Supabase database (`status: pending`).
+1. An upstream agent drafts a change as an **approval** row in the Operator Surface Supabase database (`status: pending`). For Salesforce-side actions (create_task, update_field, change_health_band, add_save_plan, flag_data_gap) the drafter is **Galileo** via `bin/propose_action.py`. For communications actions (send_reply, send_email, chatter_post) the drafter is **Bell** via `bin/propose_email.py`. Each drafter stamps `metadata.drafted_by` so the audit trail is clear.
 2. A human reviews and approves (or rejects) the approval in the Operator Surface UI. The UI sets `status = approved` and stamps `decided_by` + `decided_at`.
 3. The Operator Surface sends a webhook to the Hermes droplet. Galileo receives it and dispatches you with the approval id.
 4. You read the approval from Supabase, verify it is approved + not already executed, and perform the Salesforce write.
