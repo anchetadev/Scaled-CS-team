@@ -1,40 +1,49 @@
 # Hopper — Controlled Executor Distribution
 name: hopper
-version: 1.1.0
-description: "Hopper — Controlled Executor for the Scaled CS platform. Writes approved changes back to Salesforce with per-batch human approval. Deliberate and confirmation-seeking. (Approval-gate design in progress.)"
+version: 1.2.0
+description: "Hopper — Controlled Executor for the Scaled CS platform. Writes approved changes back to Salesforce. The bright line — Operator-Surface approves, Hopper executes — is enforced in code (bin/execute_approval.py refuses on status != approved or metadata.executed = true)."
 hermes_requires: ">=0.13.0"
 author: "Angel Ancheta"
 license: "MIT"
 
-# NOTE: Hopper is the only write-capable agent and is still under design (the
-# per-batch human-approval gate is not yet built). Salesforce write credentials
-# are declared but optional until the executor is wired and the approval flow
-# is verified. Do NOT give Hopper a write-capable Salesforce user until then.
+# Hopper is the only write-capable agent. The bright-line is enforced at THREE
+# layers (in increasing scope):
+#   1. The Salesforce Connected App Run-As user holds a narrow write permission
+#      set. The user cannot write fields outside that set.
+#   2. bin/sf_writer.py's WRITE_ALLOWLIST refuses to call the SF API unless the
+#      SObject + field combination is explicitly allowlisted.
+#   3. bin/execute_approval.py refuses to dispatch any handler unless the
+#      approval row in Supabase has status == "approved" AND metadata.executed
+#      is not already true. The Operator Surface owns approvals; Hopper never
+#      approves his own writes.
+#
+# Until the Connected App is provisioned, bin/sf_writer.py runs in STUB mode —
+# returns deterministic fake SF record ids so the entire pipeline (approval ->
+# webhook -> Galileo -> Hopper -> Supabase outcome) is testable end-to-end.
+
 env_requires:
   - name: OPENROUTER_API_KEY
     description: "OpenRouter API key for model access"
     required: true
 
-  - name: SALESFORCE_INSTANCE_URL
-    description: "Salesforce instance / My Domain URL"
+  # ── Salesforce write connector (Hopper Executor Connected App) ──
+  - name: SALESFORCE_HOPPER_INSTANCE_URL
+    description: "Salesforce My Domain URL for the Hopper Executor app (bare host, e.g. https://yourco.develop.my.salesforce.com)"
+    required: false  # falls back to stub mode if absent
+
+  - name: SALESFORCE_HOPPER_CONSUMER_KEY
+    description: "Hopper Executor External Client App consumer key (OAuth client id). Run-As user holds a write permission set narrowed to the WRITE_ALLOWLIST in bin/sf_writer.py."
     required: false
 
-  - name: SALESFORCE_CONSUMER_KEY
-    description: "Connected App consumer key (write-capable; pending approval-gate design)"
+  - name: SALESFORCE_HOPPER_CONSUMER_SECRET
+    description: "Hopper Executor External Client App consumer secret (OAuth client secret)"
     required: false
 
-  - name: SALESFORCE_CONSUMER_SECRET
-    description: "Connected App consumer secret (write-capable; pending approval-gate design)"
-    required: false
+  # ── Operator Surface approval queue (Supabase, Hermes-side service-role) ──
+  - name: SUPABASE_URL
+    description: "Operator Surface Supabase project URL (e.g. https://<project>.supabase.co)"
+    required: true
 
-  - name: SALESFORCE_USERNAME
-    description: "Write-capable Salesforce user (pending approval-gate design)"
-    required: false
-
-  - name: SALESFORCE_PASSWORD
-    description: "Write-capable Salesforce user password (pending approval-gate design)"
-    required: false
-
-  - name: SALESFORCE_SECURITY_TOKEN
-    description: "Write-capable Salesforce user security token (pending approval-gate design)"
-    required: false
+  - name: SUPABASE_SERVICE_ROLE_KEY
+    description: "Supabase service-role key (bypasses RLS; Hermes-side only — never expose to clients). Used to read approval rows and write outcome metadata."
+    required: true
