@@ -91,15 +91,44 @@ def _verify_signature(secret: bytes, body: bytes, sent_header: str | None) -> bo
 # Each handler returns (status_code, response_dict). It MUST NOT block on the
 # downstream dispatch — use _spawn_galileo to fire-and-forget.
 
+DISPATCH_LOG_DIR = os.path.expanduser("~/.hermes/dispatch-logs")
+
+
 def _spawn_galileo(prompt: str, corr_id: str) -> int:
-    """Spawn galileo -z "<prompt>" detached. Returns the child PID."""
+    """Spawn galileo -z "<prompt>" detached. Returns the child PID.
+
+    Captures stdout+stderr to ~/.hermes/dispatch-logs/galileo-<corr>.log so
+    that failures leave a forensic trail. Before this change the receiver
+    sent both streams to /dev/null, which meant any crash inside Galileo
+    (model errors, OOM, gmail-token expiry, etc.) was invisible — the
+    approval metadata showed no execution_blocker / execution_error
+    because Galileo never got far enough to write them, and there was no
+    out-of-band log to look at either.
+    """
+    try:
+        os.makedirs(DISPATCH_LOG_DIR, exist_ok=True)
+    except Exception as e:
+        logging.warning("could not create %s: %s — falling back to DEVNULL", DISPATCH_LOG_DIR, e)
+        log_fd = subprocess.DEVNULL
+    else:
+        log_path = os.path.join(DISPATCH_LOG_DIR, "galileo-" + corr_id + ".log")
+        log_fd = open(log_path, "ab", buffering=0)
+        # First write to the log identifies the dispatch — helpful when
+        # tailing if multiple corr_ids ran near each other.
+        log_fd.write(("=== dispatched " + corr_id + " prompt=" + repr(prompt) + "\n").encode())
     proc = subprocess.Popen(
         [GALILEO_BIN, "-z", prompt],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        stdout=log_fd,
+        stderr=subprocess.STDOUT,
         stdin=subprocess.DEVNULL,
         start_new_session=True,
     )
+    # Parent closes its file handle; child has already inherited the fd.
+    if log_fd is not subprocess.DEVNULL:
+        try:
+            log_fd.close()
+        except Exception:
+            pass
     logging.info("corr=%s dispatched galileo pid=%s prompt=%r", corr_id, proc.pid, prompt)
     return proc.pid
 
