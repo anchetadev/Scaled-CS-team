@@ -162,7 +162,7 @@ def cmd_propose(payload):
         },
         "rationale": p.get("rationale", "Follow-up drafted from the meeting transcript."),
         "status": "pending",
-        "metadata": {"account": p.get("account"), "drafted_by": "bell", "risk_level": "med"},
+        "metadata": {"account_name": p.get("account"), "drafted_by": "bell", "risk_level": "med"},
     }
     st, rows = req("POST", "/rest/v1/approvals", body=approval, prefer="return=representation")
     if st in (200, 201) and rows:
