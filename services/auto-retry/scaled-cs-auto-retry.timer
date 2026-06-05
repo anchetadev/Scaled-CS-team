@@ -1,0 +1,14 @@
+[Unit]
+Description=Fire scaled-cs-auto-retry every 60s
+
+[Timer]
+# First run 2 minutes after boot — let the gateway warm up
+OnBootSec=2min
+# Then every 60s, anchored to the last successful run start
+OnUnitActiveSec=60s
+# Don't bunch up if the system was asleep
+AccuracySec=10s
+Persistent=true
+
+[Install]
+WantedBy=timers.target

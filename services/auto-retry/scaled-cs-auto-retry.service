@@ -1,0 +1,18 @@
+[Unit]
+Description=Scaled-CS auto-retry — re-dispatch stuck approvals to Galileo
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# galileo wrapper lives in ~/.local/bin/; needs hermes venv for actual binary,
+# which the wrapper resolves through PATH expansion at exec time.
+Environment=PATH=%h/.hermes/hermes-agent/venv/bin:%h/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/usr/bin/python3 %h/hermes-scaled-cs/services/auto-retry/auto_retry.py
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=scaled-cs-auto-retry
+
+# Belt-and-suspenders: cap memory so a runaway scan can't OOM the droplet
+MemoryMax=128M
+TimeoutStartSec=120s
